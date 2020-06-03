@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+
+<html lang="en">
+	<head>
+		<title>Fhir Application</title>
+	</head>
+
+	<body>
+		<input type="text" id="Surname" name="Surname" value="Jakis" form="page" formmethod='get'>
+		<button class="lurker" form="page" type="submit" formmethod="post" name="next" value="search">Search</button>
+		<div id="debug">Alfa</div>
+		<table>
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Surname</th>
+					<th>Link</th>
+				</tr>
+			</thead>
+
+			<tbody id="Patients">
+			</tbody>
+		</table>
+
+
+		<table>
+			<thead>
+				<tr>
+					<th>Temperature</th>
+					<th>Whatever</th>
+					<th>Link</th>
+				</tr>
+			</thead>
+
+			<tbody id="Wisdom">
+			</tbody>
+		</table>
+	</body>
+	
+	<form id="page" style="display:none"></form>
+</html>
