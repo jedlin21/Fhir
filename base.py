@@ -19,14 +19,59 @@ def showing(sur="", all=0):
             temp['Id']=str(x['resource']['identifier'][0]['value'])
     return PatientData
 
+def showingObservation(s, sur="", all=0):
+    r = requests.get(url = f"http://localhost:8090/baseDstu3/Observation?patient.identifier={s}", params = "")
+
+    PatientData=[]
+    for x in r.json()['entry']:
+        if (True or all==1 or re.search(sur, str(x['resource']['name'][0]['family'])) or re.search(sur, str(x['resource']['name'][0]['given']))):
+            temp={}
+            PatientData.append(temp)
+            temp['Display']=str(x['resource']['code']['text'])
+            temp['Date']=str(x['resource']['effectiveDateTime'])
+            try:
+                temp['Value']=f"{x['resource']['valueQuantity']['value']} [{x['resource']['valueQuantity']['code']}]" 
+            except:
+                if temp['Display'] == "Blood Pressure":
+                    zisDict=x['resource']['component']
+                    temp['Display']=zisDict[0]['code']['text']
+                    temp['Value']=f"{zisDict[0]['valueQuantity']['value']} [{zisDict[0]['valueQuantity']['code']}]"
+
+                    temp2=temp.copy()
+                    temp2['Display']=zisDict[1]['code']['text']
+                    temp2['Value']=f"{zisDict[1]['valueQuantity']['value']} [{zisDict[1]['valueQuantity']['code']}]"
+                    PatientData.append(temp2)
+                else:    
+                    temp['Value']=""
+    return PatientData
+
+
+def showingMedicationR(s, sur="", all=0):
+    r = requests.get(url = f"http://localhost:8090/baseDstu3/MedicationRequest?patient.identifier={s}", params = "")
+
+    PatientData=[]
+    for x in r.json()['entry']:
+        if (True or all==1 or re.search(sur, str(x['resource']['name'][0]['family'])) or re.search(sur, str(x['resource']['name'][0]['given']))):
+            temp={}
+            PatientData.append(temp)
+            temp['Date']=str(x['resource']['authoredOn'])
+            temp['Status']=str(x['resource']['status'])
+            temp['Medication']=f"{x['resource']['medicationCodeableConcept']['coding'][0]['text']}"
+            try:
+                temp['dosageInstruction']=f"{x['resource']['dosageInstruction']['additionalInstruction']['text']}" 
+            except:
+                temp['dosageInstruction']=""
+
+    return PatientData
+
 
 #href=f"http://localhost:8090/baseDstu3/Observation?patient.identifier={y[x]}"
-def createElem(doc, tab, elemList):
+def createElem(doc, tab, elemList, namez=['Name', 'Surname', 'Id']):
     print(tab)
     for y in elemList:
         trow = doc.new_tag("tr")
         tab.append(trow)
-        for x in ['Name', 'Surname', 'Id']:
+        for x in namez:
             info=doc.new_tag("td")
             if (x=='Id'):
                 #link=doc.new_tag("button", form="page", formmethod="post", type="submit", name="next", value=y[x])
@@ -50,10 +95,10 @@ def Wisdom():
             jsonInfo=showing(sur=req.form['Surname'])
             createElem(souper, data, jsonInfo)
         else:
-            data=souper.find("div", id="debug")
-            data.string=f"http://localhost:8090/baseDstu3/Observation?patient.identifier={s}"
-
-            #Telefon mi siadł, poczekaj chwilę
+            jsonInfo=showingObservation(s)
+            data=souper.find("tbody", id="Observation")
+            createElem(souper, data, jsonInfo, ['Display', 'Date', 'Value'])
+            #data.string=f"http://localhost:8090/baseDstu3/Observation?patient.identifier={s}"
     
         return render_template_string(souper.prettify())
 
