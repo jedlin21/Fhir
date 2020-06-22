@@ -9,10 +9,14 @@ app=Flask(__name__)
 
 patientId="whatever"
 
+class Process:
+    main=1
+
 def showing(sur="", all=0):
     r = requests.get(url = "http://localhost:8090/baseDstu3/Patient?_count=1000000", params = "")
 
     PatientData=[]
+    print(r.json())
     for x in r.json()['entry']:
         if (all==1 or re.search(sur, str(x['resource']['name'][0]['family'])) or re.search(sur, str(x['resource']['name'][0]['given']))):
             temp={}
@@ -23,6 +27,7 @@ def showing(sur="", all=0):
     return PatientData
 
 def showingObservation(s, sur="", all=0, minDate="1928-04-28", maxDate="2112-04-28", minDateHeight="1928-04-28", maxDateHeight="2112-04-28", minDateWeight="1928-04-28", maxDateWeight="2112-04-28"):
+    Process.main=0
     r = requests.get(url = f"http://localhost:8090/baseDstu3/Observation?patient.identifier={s}&_count=1000000", params = "")
     minDateTime=time.strptime(minDate, "%Y-%m-%d")
     maxDateTime=time.strptime(maxDate, "%Y-%m-%d")
@@ -75,10 +80,6 @@ def showingObservation(s, sur="", all=0, minDate="1928-04-28", maxDate="2112-04-
             #     for comp in x['resource']['component']:
             #         temp['Component']['Text'].append(comp['code']['text'])
             #         temp['Component']['Value'].append(f"{comp['valueQuantity']['value']} [{comp['valueQuantity']['code']}]")
-            
-            
-            
-            
             
 
             try:
@@ -189,6 +190,7 @@ def createElem(doc, tab, elemList, namez=['Name', 'Surname', 'Id']):
 
 @app.route('/', methods=['GET', 'POST'])
 def Wisdom():
+    Process.main=1
     req=request
     html_doc=open('./templates/index.html')
     souper=BeautifulSoup(html_doc, 'html.parser')
@@ -237,6 +239,7 @@ def Wisdom():
             data=souper.find("tbody", id="Observation")
             createElem(souper, data, jsonInfo, ['Date', 'Display', 'Value', 'Component'])
             createElem(souper, med_data, jsonInfo_medic, ['Date', 'Status', 'Medication', 'Timing', 'dosageInstruction'])
+
             #data.string=f"http://localhost:8090/baseDstu3/Observation?patient.identifier={s}"
     
         return render_template_string(souper.prettify())
@@ -266,6 +269,10 @@ def data_weight():
     html_doc=open('./data_weight.csv')
     souper=BeautifulSoup(html_doc, 'html.parser')
     return render_template_string(souper.prettify())
+
+@app.context_processor
+def jinjautils():
+    return dict(main=Process.main)
 
 
 if __name__=='__main__':

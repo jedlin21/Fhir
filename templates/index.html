@@ -3,6 +3,19 @@
 <html lang="en">
 	<style> /* set the CSS */
 
+		.parama{
+			display:inline-block;
+		}
+
+
+		table, th, tr, td{
+			border-color:#BBBBBB;
+			border-width:0.5px;
+			border-style:solid;
+			border-collapse:collapse;
+
+		}
+
 		body { font: 12px Arial;}
 		
 		path { 
@@ -33,8 +46,12 @@
 		<button class="lurker" form="page" type="submit" formmethod="post" name="next" value="search">Search</button>
 		<button class="lurker" form="page" type="submit" formmethod="post" name="next" value="searchTime">Search Time</button>
 
-		<div id="debug">Alfa</div>
-		<table>
+		{% if main==0 %}
+			<table style="display:none;">
+		{% else %}
+			<table>
+		{% endif %}
+
 			<thead>
 				<tr>
 					<th>Name</th>
@@ -47,8 +64,13 @@
 			</tbody>
 		</table>
 
+		<br>
 
-		<table>
+		{% if main==1 %}
+			<table style="display:none;">
+		{% else %}
+			<table>
+		{% endif %}
 			<thead>
 				<tr>
 					<th>Date</th>
@@ -62,31 +84,46 @@
 			</tbody>
 		</table>
 
-		<table>
+		<br>
+
+		{% if main==1 %}
+			<table style="display:none;">
+		{% else %}
+			<table>
+		{% endif %}
 			<thead>
 				<tr>
-					<th>Display</th>
 					<th>Date</th>
+					<th>Display</th>
 					<th>Value [unit]</th>
 				</tr>
 			</thead>
 			<tbody id="Observation">
 			</tbody>
 		</table>
-		<div>
-			<h4>Height</h4>
-			<input type="date" id="MinDateHeight" name="MinDateHeight" value="1915-04-28" form="page" formmethod='get'>
-			<input type="date" id="MaxDateHeight" name="MaxDateHeight" value="2112-04-28" form="page" formmethod='get'>
 
-			<button class="lurker" form="page" type="submit" formmethod="post" name="next" value="searchTime">Search Time</button>
-		</div>
+		{% if main==1 %}
+			<div id="Graphs" style="display:none;">
+		{% else %}
+			<div id="Graphs">
+		{% endif %}
 
-		<div>
-			<h4>Weight</h4>
-			<input type="date" id="MinDateWeight" name="MinDateWeight" value="1915-04-28" form="page" formmethod='get'>
-			<input type="date" id="MaxDateWeight" name="MaxDateWeight" value="2112-04-28" form="page" formmethod='get'>
+			<div>
+				<h4>Height</h4>
+				<input type="date" id="MinDateHeight" name="MinDateHeight" value="1915-04-28" form="page" formmethod='get'>
+				<input type="date" id="MaxDateHeight" name="MaxDateHeight" value="2112-04-28" form="page" formmethod='get'>
 
-			<button class="lurker" form="page" type="submit" formmethod="post" name="next" value="searchTime">Search Time</button>
+				<button class="lurker" form="page" type="submit" formmethod="post" name="next" value="searchTime">Search Time</button>
+			</div>
+
+			<div>
+				<h4>Weight</h4>
+				<input type="date" id="MinDateWeight" name="MinDateWeight" value="1915-04-28" form="page" formmethod='get'>
+				<input type="date" id="MaxDateWeight" name="MaxDateWeight" value="2112-04-28" form="page" formmethod='get'>
+
+				<button class="lurker" form="page" type="submit" formmethod="post" name="next" value="searchTime">Search Time</button>
+			</div>
+
 		</div>
 
 		<!-- load the d3.js library -->    
@@ -119,7 +156,7 @@
 				.y(function(d) { return y(d.close); });
 				
 			// Adds the svg canvas
-			var svg = d3.select("body")
+			var svg = d3.select("#Graphs")
 				.append("svg")
 					.attr("width", width + margin.left + margin.right)
 					.attr("height", height + margin.top + margin.bottom)
@@ -175,7 +212,7 @@
 
 
 			// Adds the svg canvas
-			var svg2 = d3.select("body")
+			var svg2 = d3.select("#Graphs")
 				.append("svg")
 					.attr("width", width + margin.left + margin.right)
 					.attr("height", height + margin.top + margin.bottom)
