@@ -95,7 +95,9 @@
 				<tr>
 					<th>Date</th>
 					<th>Display</th>
-					<th>Value [unit]</th>
+					<th>Value</th>
+					<th>Unit</th>
+					<th>Edit</th>
 				</tr>
 			</thead>
 			<tbody id="Observation">
@@ -109,17 +111,16 @@
 		{% endif %}
 
 			<div>
-				<h4>Height</h4>
-				<input type="date" id="MinDateHeight" name="MinDateHeight" value="1915-04-28" form="page" formmethod='get'>
-				<input type="date" id="MaxDateHeight" name="MaxDateHeight" value="2112-04-28" form="page" formmethod='get'>
-
-				<button class="lurker" form="page" type="submit" formmethod="post" name="next" value="searchTime">Search Time</button>
-			</div>
-
-			<div>
 				<h4>Weight</h4>
 				<input type="date" id="MinDateWeight" name="MinDateWeight" value="1915-04-28" form="page" formmethod='get'>
 				<input type="date" id="MaxDateWeight" name="MaxDateWeight" value="2112-04-28" form="page" formmethod='get'>
+
+				<button class="lurker" form="page" type="submit" formmethod="post" name="next" value="searchTime">Search Time</button>
+			</div>
+			<div>
+				<h4>Height</h4>
+				<input type="date" id="MinDateHeight" name="MinDateHeight" value="1915-04-28" form="page" formmethod='get'>
+				<input type="date" id="MaxDateHeight" name="MaxDateHeight" value="2112-04-28" form="page" formmethod='get'>
 
 				<button class="lurker" form="page" type="submit" formmethod="post" name="next" value="searchTime">Search Time</button>
 			</div>

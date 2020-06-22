@@ -11,12 +11,12 @@ patientId="whatever"
 
 class Process:
     main=1
+    beniz=0
 
 def showing(sur="", all=0):
     r = requests.get(url = "http://localhost:8090/baseDstu3/Patient?_count=1000000", params = "")
 
     PatientData=[]
-    print(r.json())
     for x in r.json()['entry']:
         if (all==1 or re.search(sur, str(x['resource']['name'][0]['family'])) or re.search(sur, str(x['resource']['name'][0]['given']))):
             temp={}
@@ -25,6 +25,40 @@ def showing(sur="", all=0):
             temp['Surname']=str(x['resource']['name'][0]['family'])
             temp['Id']=str(x['resource']['identifier'][0]['value'])
     return PatientData
+
+
+
+#Furnance of Palingnesia
+def getObservation(s, disp, date, value):
+    r = requests.get(url = f"http://localhost:8090/baseDstu3/Observation?patient.identifier={s}&_count=1000000", params = "")
+    wanter=r.json()['entry']
+    oid=""
+
+    for i, x in enumerate(wanter):
+        if str(x['resource']['code']['text'])!=disp or str(x['resource']['effectiveDateTime'])!=date:
+            continue
+        wanter[i]['resource']['valueQuantity']['value']=value
+        oid=x['resource']['id']
+        break
+
+    r = requests.get(url = f"http://localhost:8090/baseDstu3/Observation/{oid}", params = "")
+    valinor=r.json()
+    valinor['valueQuantity']['value']=value
+    print(valinor)
+
+    fucking_header={
+            'Accept-Charset': 'utf-8',
+            'Accept': 'application/fhir+json;q=1.0, application/json+fhir;q=0.9',
+            'User-Agent': 'HAPI-FHIR/3.2.0 (FHIR Client; FHIR 3.0.1/DSTU3; apache)',
+            'Accept-Encoding': 'gzip',
+            'Content-Type': 'application/fhir+json; charset=UTF-8',
+    }
+
+    print(valinor)
+    res=requests.put(url=f"http://localhost:8090/baseDstu3/Observation/{oid}?_format=json&_pretty=true", data=str(valinor), headers=fucking_header)
+    print(res.json())
+    return wanter
+
 
 def showingObservation(s, sur="", all=0, minDate="1928-04-28", maxDate="2112-04-28", minDateHeight="1928-04-28", maxDateHeight="2112-04-28", minDateWeight="1928-04-28", maxDateWeight="2112-04-28"):
     Process.main=0
@@ -74,16 +108,11 @@ def showingObservation(s, sur="", all=0, minDate="1928-04-28", maxDate="2112-04-
             PatientData.append(temp)
             temp['Display']=str(x['resource']['code']['text'])
             temp['Date']=str(x['resource']['effectiveDateTime'])
-            # if(len(x['resource']['component']) != 0):
-            #     temp['Component']['Text'] = list()
-            #     temp['Component']['Value'] = list()
-            #     for comp in x['resource']['component']:
-            #         temp['Component']['Text'].append(comp['code']['text'])
-            #         temp['Component']['Value'].append(f"{comp['valueQuantity']['value']} [{comp['valueQuantity']['code']}]")
             
 
             try:
-                temp['Value']=f"{x['resource']['valueQuantity']['value']} [{x['resource']['valueQuantity']['code']}]" 
+                temp['Value']=f"{x['resource']['valueQuantity']['value']}" 
+                temp['Unit']=f"{x['resource']['valueQuantity']['code']}"
             except:
                 if temp['Display'] in ["Tobacco smoking status NHIS",
                                          "Appearance of Urine", 
@@ -98,24 +127,19 @@ def showingObservation(s, sur="", all=0, minDate="1928-04-28", maxDate="2112-04-
                                           "Hemoglobin [Presence] in Urine by Test strip",
                                           "Leukocyte esterase [Presence] in Urine by Test strip"
                                           ]:
-                    # zisDict=x['resource']['component']
-                    # temp['Display']=zisDict[0]['code']['text']
-                    # temp['Value']=f"{zisDict[0]['valueQuantity']['value']} [{zisDict[0]['valueQuantity']['code']}]"
-
-                    # temp2=temp.copy()
-                    # temp2['Display']=zisDict[1]['code']['text']
-                    # temp2['Value']=f"{zisDict[1]['valueQuantity']['value']} [{zisDict[1]['valueQuantity']['code']}]"
-                    # PatientData.append(temp2)
                     temp['Value']=""
+                    temp['Unit']=""
                 else:
-                    print(temp['Display'])
                     temp['Value']=""
+                    temp['Unit']=""
                     temp['Component'] = {}   
                     temp['Component']['Text'] = list()
                     temp['Component']['Value'] = list()
+                    temp['Component']['Unit'] = list()
                     for comp in x['resource']['component']:
                         temp['Component']['Text'].append(comp['code']['text'])
-                        temp['Component']['Value'].append(f"{comp['valueQuantity']['value']} [{comp['valueQuantity']['code']}]") 
+                        temp['Component']['Value'].append(f"{comp['valueQuantity']['value']}") 
+                        temp['Component']['Unit'].append(f"{comp['valueQuantity']['code']}") 
     
     return PatientData
 
@@ -163,15 +187,29 @@ def createElem(doc, tab, elemList, namez=['Name', 'Surname', 'Id']):
         tab.append(trow)
         for x in namez:
             if ('Component' in y and x=='Component'):
-                for t, v in zip(y[x]['Text'], y[x]['Value']):
+                for t, v, u in zip(y[x]['Text'], y[x]['Value'], y[x]['Unit']):
                     trow_inner = doc.new_tag("tr")
                     info1=doc.new_tag("td")
                     info_text=doc.new_tag("td")
                     info_text.string=t
 
                     info_value=doc.new_tag("td")
-                    info_value.string=v
-                    _=[trow_inner.append(x) for x in [info1, info_text, info_value]]
+                    inputter=doc.new_tag("input", attrs={'value':v, 'form':f'beniz{Process.beniz}'})
+                    inputter['style']="height:12px;"
+                    info_value.append(inputter)
+
+                    info_unit=doc.new_tag("td")
+                    info_unit.string=u
+
+                    editor=doc.new_tag("button", attrs={'type':'submit', 'form':f'beniz{Process.beniz}'})
+                    former=doc.new_tag("form", attrs={'style':'display: noen;', 'id':f'beniz{Process.beniz}'})
+                    Process.beniz+=1
+
+                    editor.string="Edit"
+                    editor_wrap=doc.new_tag("td")
+                    editor_wrap.append(editor)
+
+                    _=[trow_inner.append(x) for x in [info1, info_text, info_value, info_unit, editor_wrap]]
 
                     trow_inner['class']=currentClass
                     tab.append(trow_inner)
@@ -183,6 +221,23 @@ def createElem(doc, tab, elemList, namez=['Name', 'Surname', 'Id']):
                     link=doc.new_tag("button", attrs={"form":"page", "formmethod":"post", "type":"submit", "name":"next", "value":y[x]})
                     link.string=y[x]
                     info.append(link)
+
+                elif (x=='Value' and y[x]!=""):
+                    inputter=doc.new_tag("input", attrs={'name':'truth', 'value':y[x], 'form':f'beniz{Process.beniz}'})
+                    false_inputter=doc.new_tag("input", attrs={'style':'display:none;', 'name':'date', 'value':f'{y["Date"]}', 'form':f'beniz{Process.beniz}'})
+                    false_inputter2=doc.new_tag("input", attrs={'style':'display:none;', 'name':'disp', 'value':f'{y["Display"]}', 'form':f'beniz{Process.beniz}'})
+                    _=[info.append(x) for x in [inputter, false_inputter, false_inputter2]]
+
+                elif x=="Editor":
+                    if y["Value"]!="":
+                        editor=doc.new_tag("button", attrs={'type':'submit', 'form':f'beniz{Process.beniz}', 'formmethod':'post', 'name':'next', 'value':'Outer'})
+                        former=doc.new_tag("form", attrs={'style':'display: none;', 'id':f'beniz{Process.beniz}'})
+
+                        editor.string="Edit"
+                        info.append(editor)
+                        info.append(former)
+                    Process.beniz+=1
+
                 else:
                     info.string=y[x]
                 trow.append(info)
@@ -200,7 +255,8 @@ def Wisdom():
     med_data=souper.find("tbody", id="Medication")
     if (req.method=='POST'):
         s=req.form['next']
-        if (s=='search'):
+        
+        if s=='search':
             jsonInfo=showing(sur=req.form['Surname'])
             createElem(souper, data, jsonInfo)
 
@@ -216,7 +272,7 @@ def Wisdom():
             jsonInfo_medic=showingMedicationR(patientId, minDate=req.form['MinDate'], maxDate=req.form['MaxDate'])
 
             data=souper.find("tbody", id="Observation")
-            createElem(souper, data, jsonInfo, ['Date', 'Display', 'Value'])
+            createElem(souper, data, jsonInfo, ['Date', 'Display', 'Value', 'Unit', 'Editor'])
 
             souper.find("input", id="MinDate")["value"]=req.form['MinDate']
             souper.find("input", id="MaxDate")["value"]=req.form['MaxDate']
@@ -226,18 +282,30 @@ def Wisdom():
             souper.find("input", id="MaxDateWeight")["value"]=req.form['MaxDateWeight']
 
         else:
-            jsonInfo=showingObservation(s, minDate=req.form['MinDate'],
-                                           maxDate=req.form['MaxDate'],
-                                           minDateHeight=req.form['MinDateHeight'], 
-                                           maxDateHeight=req.form['MaxDateHeight'], 
-                                           minDateWeight=req.form['MinDateWeight'], 
-                                           maxDateWeight=req.form['MaxDateWeight'])
+            if s=='Outer':
+                value=req.form['truth']
+                disp=req.form['disp']
+                date=req.form['date']
+                s=patientId
+                print(disp, date, value)
+                vision=getObservation(s, disp, date, value)
 
-            jsonInfo_medic=showingMedicationR(s, minDate=req.form['MinDate'], maxDate=req.form['MaxDate'])
+            try:
+                jsonInfo=showingObservation(s, minDate=req.form['MinDate'],
+                                               maxDate=req.form['MaxDate'],
+                                               minDateHeight=req.form['MinDateHeight'], 
+                                               maxDateHeight=req.form['MaxDateHeight'], 
+                                               minDateWeight=req.form['MinDateWeight'], 
+                                               maxDateWeight=req.form['MaxDateWeight'])
+
+                jsonInfo_medic=showingMedicationR(s, minDate=req.form['MinDate'], maxDate=req.form['MaxDate'])
+            except:
+                jsonInfo=showingObservation(s)
+                jsonInfo_medic=showingMedicationR(s)
 
             patientId=s
             data=souper.find("tbody", id="Observation")
-            createElem(souper, data, jsonInfo, ['Date', 'Display', 'Value', 'Component'])
+            createElem(souper, data, jsonInfo, ['Date', 'Display', 'Value', 'Unit', 'Component', 'Editor'])
             createElem(souper, med_data, jsonInfo_medic, ['Date', 'Status', 'Medication', 'Timing', 'dosageInstruction'])
 
             #data.string=f"http://localhost:8090/baseDstu3/Observation?patient.identifier={s}"
